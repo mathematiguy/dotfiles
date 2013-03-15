@@ -1,1 +1,3 @@
-.config/RProfile
+## use bioclite
+source("http://bioconductor.org/biocLite.R")
+bioclite = biocLite
