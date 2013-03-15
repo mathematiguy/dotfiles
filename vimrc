@@ -1,1 +1,0 @@
-/Users/rory/Dropbox/config/.vimrc
