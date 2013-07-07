@@ -1,3 +1,55 @@
 ## use bioclite
-source("http://bioconductor.org/biocLite.R")
-bioclite = biocLite
+#source("http://bioconductor.org/biocLite.R")
+#bioclite = biocLite
+options(rstudio.markdownToHTML =
+  function(inputFile, outputFile) {
+    require(markdown)
+    markdownToHTML(inputFile, outputFile, stylesheet='~/Dropbox/Public/stylesheets/GitHub2.css')
+  }
+)
+
+## from http://gettinggeneticsdone.blogspot.com/2013/07/customize-rprofile.html
+# don't ask for CRAN repository
+options("repos" = c(CRAN = "http://cran.rstudio.com/"))
+
+## Create a new invisible environment for all the functions to go in so it doesn't clutter your workspace.
+.env <- new.env()
+
+## ht==headtail, i.e., show the first and last 10 items of an object
+.env$ht <- function(d) rbind(head(d,10),tail(d,10))
+
+## List objects and classes (from @_inundata)
+.env$lsa <- function() {
+    obj_type <- function(x) { class(get(x)) }
+    foo=data.frame(sapply(ls(envir=.GlobalEnv),obj_type))
+    foo$object_name=rownames(foo)
+    names(foo)[1]="class"
+    names(foo)[2]="object"
+    return(unrowname(foo))
+}
+
+## List all functions in a package (also from @_inundata)
+.env$lsp <-function(package, all.names = FALSE, pattern) {
+    package <- deparse(substitute(package))
+    ls(
+    pos = paste("package", package, sep = ":"),
+    all.names = all.names,
+    pattern = pattern
+    )
+}
+
+## Open Finder to the current directory on mac
+.env$macopen <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
+.env$o <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
+
+attach(.env)
+.First <- function() {
+    library(ggplot2)
+    cat("\nSuccessfully loaded .Rprofile at", date(), "\n")
+}
+
+## .Last() run at the end of the session
+.Last <- function() {
+    # save command history here?
+    cat("\nGoodbye at ", date(), "\n")
+}
