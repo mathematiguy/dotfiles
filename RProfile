@@ -42,14 +42,3 @@ options("repos" = c(CRAN = "http://cran.rstudio.com/"))
 .env$macopen <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 .env$o <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 
-attach(.env)
-.First <- function() {
-    library(ggplot2)
-    cat("\nSuccessfully loaded .Rprofile at", date(), "\n")
-}
-
-## .Last() run at the end of the session
-.Last <- function() {
-    # save command history here?
-    cat("\nGoodbye at ", date(), "\n")
-}
