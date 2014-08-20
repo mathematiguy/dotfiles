@@ -42,3 +42,5 @@ options("repos" = c(CRAN = "http://cran.rstudio.com/"))
 .env$macopen <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 .env$o <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 
+## For the love of god don't open up tcl/tk ever
+options(menu.graphics=FALSE)
