@@ -1,0 +1,17 @@
+[user]
+	name = roryk
+	email = rory.kirchner@gmail.com
+[core]
+	editor = vim
+[push]
+	default = simple
+[alias]
+	up = !sh -c 'git pull --rebase --prune && git log --pretty=format:\"%Cred%ae %Creset- %C(yellow)%s %Creset(%ar)\" HEAD@{1}..'
+	st = status -sb
+	cleanup = !git remote prune origin && git gc && git clean -dfx && git stash clear
+	who = shortlog -n -s --no-merges
+	pr = !sh -c 'git fetch origin pull/$1/head:pr$1' -
+[color]
+	ui = 1
+[credential]
+	helper = osxkeychain
