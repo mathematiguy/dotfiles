@@ -207,6 +207,7 @@ layers configuration."
                          "~/Documents/Org/inbox.org"))
 (setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
 (setq org-icalendar-alarm-time 60)
+(setq org-agenda-default-appointment-duration 60)
 
 (setq org-refile-targets
       '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
