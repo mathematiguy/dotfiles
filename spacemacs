@@ -268,6 +268,8 @@ layers configuration."
 (add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.Rmd\\'" . markdown-mode))
 (add-to-list 'auto-mode-alist '("\\.rmd\\'" . markdown-mode))
+(add-to-list 'auto-mode-alist '("RProfile" . r-mode))
+(add-to-list 'auto-mode-alist '("\\.RProfile" . r-mode))
 (add-hook 'markdown-mode-hook 'turn-on-outline-minor-mode)
 
 (defun rmarkdown-new-chunk (name)
