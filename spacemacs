@@ -154,8 +154,9 @@ before layers configuration."
 layers configuration."
   (global-evil-search-highlight-persist 0)
   (evil-search-highlight-persist 0)
+  ;; unprettify symbols under the cursor as we are editing
+  (setq prettify-symbols-unprettify-at-point 'right-edge)
   )
-
 
 (setq org-deadline-warning-days 14)
 (global-set-key (kbd "C-c c") 'org-capture)
