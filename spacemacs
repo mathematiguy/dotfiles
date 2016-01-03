@@ -205,10 +205,12 @@ layers configuration."
 (setq org-tags-exclude-from-inheritance '("@project"))
 (setq org-agenda-files '("~/Documents/Org/hsph.org"
                          "~/Documents/Org/social.org"
-                         "~/Documents/Org/inbox.org"))
+                         "~/Documents/Org/inbox.org"
+                         "~/Documents/Org/rem.org"))
 (setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
 (setq org-icalendar-alarm-time 60)
 (setq org-agenda-default-appointment-duration 60)
+(setq org-agenda-skip-scheduled-if-done t)
 
 (setq org-refile-targets
       '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
@@ -353,9 +355,6 @@ layers configuration."
  '(custom-safe-themes
    (quote
     ("a041a61c0387c57bb65150f002862ebcfe41135a3e3425268de24200b82d6ec9" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "e80932ca56b0f109f8545576531d3fc79487ca35a9a9693b62bf30d6d08c9aaf" default)))
- '(org-agenda-files
-   (quote
-    ("~/Documents/Org/hsph.org" "~/Documents/Org/social.org" "~/Documents/Org/inbox.org")))
  '(org-modules
    (quote
     (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m)))
