@@ -213,6 +213,13 @@ layers configuration."
 (setq org-refile-targets
       '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
 
+;; don't clutter headings with clock entries
+(setq org-log-into-drawer "LOGBOOK")
+(setq org-clock-into-drawer 1)
+
+;; move the habit graph to the right more
+(setq org-habit-graph-column 60)
+
 ;; Needs terminal-notifier (brew install terminal-notifier)
 (defun notify-osx (title message)
   (call-process "terminal-notifier"
@@ -243,6 +250,13 @@ layers configuration."
   (cancel-timer roryk-org-sync-timer))
 
 (roryk-org-sync-start)
+
+;; Set to the location of your Org files on your local system
+(setq org-directory "~/Documents/Org")
+;; Set to the name of the file where new notes will be stored
+(setq org-mobile-inbox-for-pull "~/Documents/Org/inbox.org")
+;; Set to <your Dropbox root directory>/MobileOrg.
+(setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
 
 
 ;; snagged from https://github.com/kaz-yos
@@ -342,6 +356,9 @@ layers configuration."
  '(org-agenda-files
    (quote
     ("~/Documents/Org/hsph.org" "~/Documents/Org/social.org" "~/Documents/Org/inbox.org")))
+ '(org-modules
+   (quote
+    (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m)))
  '(ring-bell-function (quote ignore) t))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
