@@ -15,3 +15,9 @@
 	ui = 1
 [credential]
 	helper = osxkeychain
+[transfer] 
+        fsckobjects = true 
+[fetch] 
+        fsckobjects = true 
+[receive] 
+        fsckObjects = true 
