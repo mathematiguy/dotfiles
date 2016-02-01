@@ -158,107 +158,109 @@ layers configuration."
   (setq prettify-symbols-unprettify-at-point 'right-edge)
   )
 
-(setq org-deadline-warning-days 14)
-(global-set-key (kbd "C-c c") 'org-capture)
-(setq org-directory "~/Documents/Org")
-(setq org-default-notes-file "~/Documents/Org/hsph.org")
-(setq org-todo-keywords
-      '((sequence
-         "TODO(t)"
-         "WAITING(w)"
-         "SOMEDAY(.)"
-         "|" "DONE(x!)" "CANCELLED(c@)")
-        (sequence "NEXT(n)"
-                  "|" "DONE(x!)" "CANCLELLED(c@)")
-        (sequence "MEET(m)" "|" "COMPLETE(x)")
-        (sequence "BUG(b)" "|" "FIXED(f)")
-        (sequence "READ(r)" "|" "DONE(x!)")
-        (sequence "TODELEGATE(-)" "DELEGATED(d)" "COMPLETE(x)")))
+(with-eval-after-load 'org
+  (setq org-deadline-warning-days 14)
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (setq org-directory "~/Documents/Org")
+  (setq org-default-notes-file "~/Documents/Org/hsph.org")
+  (setq org-todo-keywords
+        '((sequence
+          "TODO(t)"
+          "WAITING(w)"
+          "SOMEDAY(.)"
+          "|" "DONE(x!)" "CANCELLED(c@)")
+          (sequence "NEXT(n)"
+                    "|" "DONE(x!)" "CANCLELLED(c@)")
+          (sequence "MEET(m)" "|" "COMPLETE(x)")
+          (sequence "BUG(b)" "|" "FIXED(f)")
+          (sequence "READ(r)" "|" "DONE(x!)")
+          (sequence "TODELEGATE(-)" "DELEGATED(d)" "COMPLETE(x)")))
 
-;; catch invisible edits
-(setq org-catch-invisible-edits t)
+  ;; catch invisible edits
+  (setq org-catch-invisible-edits t)
 
-;; stuff for GTD
-(setq org-agenda-custom-commands
-      '(("W" "Weekly Review"
-         ((agenda "" ((org-agenda-span 7)
-                      (org-agenda-start-day "-7d")
-                      (org-agenda-entry-types '(:timestamp))
-                      (org-agenda-show-log t)))
-          (stuck "")
-          (todo "TODO")  ;; review what is next
-          (todo "WAITING") ;; projects we are waiting on
-          (tags "PROJECT") ;; review all projects
-          (tags "SOMEDAY"))) ;; review someday/maybe items
+  ;; stuff for GTD
+  (setq org-agenda-custom-commands
+        '(("W" "Weekly Review"
+          ((agenda "" ((org-agenda-span 7)
+                        (org-agenda-start-day "-7d")
+                        (org-agenda-entry-types '(:timestamp))
+                        (org-agenda-show-log t)))
+            (stuck "")
+            (todo "TODO")  ;; review what is next
+            (todo "WAITING") ;; projects we are waiting on
+            (tags "PROJECT") ;; review all projects
+            (tags "SOMEDAY"))) ;; review someday/maybe items
 
-        ("D" "Daily review"
-         ((agenda "" ((org-agenda-ndays 7)))
-          (todo "NEXT")
-          (todo "DELEGATED|WAITING") ;; projects we are waiting on
-          (tags "@inbox")
-          (stuck "")
-          (tags "@errand")))))
+          ("D" "Daily review"
+          ((agenda "" ((org-agenda-ndays 7)))
+            (todo "NEXT")
+            (todo "DELEGATED|WAITING") ;; projects we are waiting on
+            (tags "@inbox")
+            (stuck "")
+            (tags "@errand")))))
 
-(setq org-stuck-projects
-        '("+@project/-MAYBE-DONE" ("NEXT" "WAITING") ("@SHOP")
-          "\\<IGNORE\\>"))
-(setq org-tags-exclude-from-inheritance '("@project"))
-(setq org-agenda-files '("~/Documents/Org/hsph.org"
-                         "~/Documents/Org/social.org"
-                         "~/Documents/Org/inbox.org"
-                         "~/Documents/Org/rem.org"))
-(setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
-(setq org-icalendar-alarm-time 60)
-(setq org-agenda-default-appointment-duration 60)
-(setq org-agenda-skip-scheduled-if-done t)
+  (setq org-stuck-projects
+          '("+@project/-MAYBE-DONE" ("NEXT" "WAITING") ("@SHOP")
+            "\\<IGNORE\\>"))
+  (setq org-tags-exclude-from-inheritance '("@project"))
+  (setq org-agenda-files '("~/Documents/Org/hsph.org"
+                          "~/Documents/Org/social.org"
+                          "~/Documents/Org/inbox.org"
+                          "~/Documents/Org/rem.org"))
+  (setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
+  (setq org-icalendar-alarm-time 60)
+  (setq org-agenda-default-appointment-duration 60)
+  (setq org-agenda-skip-scheduled-if-done t)
 
-(setq org-refile-targets
-      '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
+  (setq org-refile-targets
+        '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
 
-;; don't clutter headings with clock entries
-(setq org-log-into-drawer "LOGBOOK")
-(setq org-clock-into-drawer 1)
+  ;; don't clutter headings with clock entries
+  (setq org-log-into-drawer "LOGBOOK")
+  (setq org-clock-into-drawer 1)
 
-;; move the habit graph to the right more
-(setq org-habit-graph-column 60)
+  ;; move the habit graph to the right more
+  (setq org-habit-graph-column 60)
 
-;; Needs terminal-notifier (brew install terminal-notifier)
-(defun notify-osx (title message)
-  (call-process "terminal-notifier"
-                nil 0 nil
-                "-group" "Emacs"
-                "-title" title
-                "-sender" "org.gnu.Emacs"
-                "-message" message))
+  ;; Needs terminal-notifier (brew install terminal-notifier)
+  (defun notify-osx (title message)
+    (call-process "terminal-notifier"
+                  nil 0 nil
+                  "-group" "Emacs"
+                  "-title" title
+                  "-sender" "org.gnu.Emacs"
+                  "-message" message))
 
-(defvar roryk-org-sync-timer nil)
+  (defvar roryk-org-sync-timer nil)
 
-(defvar roryk-org-sync-secs (* 60 20))
+  (defvar roryk-org-sync-secs (* 60 20))
 
-(defun roryk-org-sync ()
-  (org-icalendar-combine-agenda-files)
-  (notify-osx "Emacs (org-mode)" "iCal sync completed."))
+  (defun roryk-org-sync ()
+    (org-icalendar-combine-agenda-files)
+    (notify-osx "Emacs (org-mode)" "iCal sync completed."))
 
-(defun roryk-org-sync-start ()
-  "Start automated org-mode syncing"
-  (interactive)
-  (setq roryk-org-sync-timer
-        (run-with-idle-timer roryk-org-sync-secs t
-                             'roryk-org-sync)))
+  (defun roryk-org-sync-start ()
+    "Start automated org-mode syncing"
+    (interactive)
+    (setq roryk-org-sync-timer
+          (run-with-idle-timer roryk-org-sync-secs t
+                              'roryk-org-sync)))
 
-(defun roryk-org-sync-stop ()
-  "Stop automated org-mode syncing"
-  (interactive)
-  (cancel-timer roryk-org-sync-timer))
+  (defun roryk-org-sync-stop ()
+    "Stop automated org-mode syncing"
+    (interactive)
+    (cancel-timer roryk-org-sync-timer))
 
-(roryk-org-sync-start)
+  (roryk-org-sync-start)
 
-;; Set to the location of your Org files on your local system
-(setq org-directory "~/Documents/Org")
-;; Set to the name of the file where new notes will be stored
-(setq org-mobile-inbox-for-pull "~/Documents/Org/inbox.org")
-;; Set to <your Dropbox root directory>/MobileOrg.
-(setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+  ;; Set to the location of your Org files on your local system
+  (setq org-directory "~/Documents/Org")
+  ;; Set to the name of the file where new notes will be stored
+  (setq org-mobile-inbox-for-pull "~/Documents/Org/inbox.org")
+  ;; Set to <your Dropbox root directory>/MobileOrg.
+  (setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+)
 
 
 ;; snagged from https://github.com/kaz-yos
