@@ -1,6 +1,7 @@
 [user]
 	name = roryk
 	email = rory.kirchner@gmail.com
+	signingkey = rory.kirchner@gmail.com
 [core]
 	editor = vim
 [push]
