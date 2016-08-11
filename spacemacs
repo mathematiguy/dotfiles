@@ -31,6 +31,9 @@
      python
      markdown
      clojure
+     go
+     lua
+     polymode
      )
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
@@ -51,6 +54,7 @@ before layers configuration."
    dotspacemacs-editing-style 'vim
    ;; If non nil output loading progess in `*Messages*' buffer.
    dotspacemacs-verbose-loading nil
+   dotspacemacs-smart-closing-parenthesis nil
    ;; Specify the startup banner. Default value is `official', it displays
    ;; the official spacemacs logo. An integer value is the index of text
    ;; banner, `random' chooses a random text banner in `core/banners'
@@ -147,6 +151,7 @@ before layers configuration."
                                           :width normal
                                           :powerline-scale 1.1))
   )
+
 
 (defun dotspacemacs/config ()
   "Configuration function.
@@ -260,6 +265,11 @@ layers configuration."
   (setq org-mobile-inbox-for-pull "~/Documents/Org/inbox.org")
   ;; Set to <your Dropbox root directory>/MobileOrg.
   (setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
+
+  ;; turn off the super annoying ess underscore replacement
+  (add-hook 'ess-mode-hook
+            (lambda ()
+              (ess-toggle-underscore nil)))
 )
 
 
@@ -276,13 +286,8 @@ layers configuration."
 ;;
 (add-hook 'python-mode-hook 'anaconda-mode)
 (add-hook 'python-mode-hook 'eldoc-mode)
-(autoload 'R-mode "ess-site.el" "" t)
 ;;(add-to-list 'auto-mode-alist '("\\.R\\'" . R-mode))
 ;;(add-to-list 'auto-mode-alist '("\\.Rmd\\'" . R-mode))
-(add-hook 'ess-mode-hook
-          (lambda ()
-            (ess-toggle-underscore nil)))
-
 (setq whitespace-style '(face empty tabs lines-tail trailing))
 (setq whitespace-line-column 80)
 (global-whitespace-mode t)
@@ -298,6 +303,10 @@ layers configuration."
 (savehist-mode +1)
 
 (setq ess-fancy-comments nil)
+
+;; remove smartparens mode, it is breaking everything.
+(remove-hook 'prog-mode-hook #'smartparens-mode)
+;; (spacemacs/toggle-smartparens-globally-off)
 
 ;; use writegood-mode
 (global-set-key "\C-cg" 'writegood-mode)
