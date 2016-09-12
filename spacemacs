@@ -34,7 +34,10 @@
      go
      lua
      polymode
+     yaml
      )
+   dotspacemacs-additional-packages '(ob-ipython)
+
    ;; A list of packages and/or extensions that will not be install and loaded.
    dotspacemacs-excluded-packages '()
    ;; If non-nil spacemacs will delete any orphan packages, i.e. packages that
@@ -161,6 +164,13 @@ layers configuration."
   (evil-search-highlight-persist 0)
   ;; unprettify symbols under the cursor as we are editing
   (setq prettify-symbols-unprettify-at-point 'right-edge)
+
+  ;; turn off super annoying ess fancy comments
+  ;; turn off the super annoying ess underscore replacement
+  (add-hook 'ess-mode-hook
+            (lambda ()
+              (setq ess-toggle-underscore nil)
+              (setq ess-fancy-comments nil)))
   )
 
 (with-eval-after-load 'org
@@ -266,11 +276,16 @@ layers configuration."
   ;; Set to <your Dropbox root directory>/MobileOrg.
   (setq org-mobile-directory "~/Dropbox/Apps/MobileOrg")
 
-  ;; turn off the super annoying ess underscore replacement
-  (add-hook 'ess-mode-hook
-            (lambda ()
-              (ess-toggle-underscore nil)))
-)
+  (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((ipython . t)))
+  (setq org-confirm-babel-evaluate nil)
+  (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
+
+  )
+
+;; cwl is YAML
+(add-to-list 'auto-mode-alist'("\\.cwl" . yaml-mode))
 
 
 ;; snagged from https://github.com/kaz-yos
