@@ -25,6 +25,7 @@
           git-enable-github-support t
           git-gutter-use-fringe t)
      osx
+     shell
      org
      syntax-checking
      ess
@@ -35,6 +36,8 @@
      lua
      polymode
      yaml
+     html
+     c-c++
      )
    dotspacemacs-additional-packages '(ob-ipython)
 
@@ -82,8 +85,8 @@ before layers configuration."
    dotspacemacs-colorize-cursor-according-to-state t
    ;; Default font. `powerline-scale' allows to quickly tweak the mode-line
    ;; size to make separators look not too crappy.
-   dotspacemacs-default-font '("Source Code Pro"
-                               :size 13
+   dotspacemacs-default-font '("DejaVu Sans Mono"
+                               :size 11
                                :weight normal
                                :width normal
                                :powerline-scale 1.1)
@@ -282,8 +285,63 @@ layers configuration."
   (setq org-confirm-babel-evaluate nil)
   (add-hook 'org-babel-after-execute-hook 'org-display-inline-images 'append)
 
-  )
+  (global-set-key (kbd "s-{") 'spacemacs/layouts-transient-state/persp-prev)
+  (global-set-key (kbd "s-}") 'spacemacs/layouts-transient-state/persp-next)
 
+
+  ;; (require 'org-mu4e)
+
+  ;; (setq mu4e-view-show-images t)
+  ;; (setq mu4e-maildir (expand-file-name "~/Maildir"))
+  ;; (setq mu4e-drafts-folder "/[Gmail].Drafts")
+  ;; (setq mu4e-sent-folder   "/[Gmail].Sent Mail")
+  ;; (setq mu4e-trash-folder  "/[Gmail].Trash")
+
+  ;; ;; don't save message to Sent Messages, GMail/IMAP will take care of this
+  ;; (setq mu4e-sent-messages-behavior 'delete)
+
+  ;; ;; setup some handy shortcuts
+  ;; (setq mu4e-maildir-shortcuts
+  ;;       '(("/INBOX"             . ?i)
+  ;;         ("/[Gmail].Sent Mail" . ?s)
+  ;;         ("/[Gmail].All Mail" . ?a)
+  ;;         ("/[Gmail].Trash"     . ?t)))
+
+  ;; ;; allow for updating mail using 'U' in the main view:
+  ;; (setq mu4e-get-mail-command "offlineimap"
+  ;;       mu4e-headers-auto-update t
+  ;;       mu4e-mu-binary "/usr/local/bin/mu"
+  ;;       mu4e-update-interval 300)
+
+  ;; (require 'mu4e-contrib)
+  ;; (setq mu4e-html2text-command 'mu4e-shr2text)
+
+  ;; ;; something about ourselves
+  ;; ;; I don't use a signature...
+  ;; (setq
+  ;;  user-mail-address "rory.kirchner@gmail.com"
+  ;;  user-full-name  "Rory Kirchner")
+
+  ;; ;; sending mail -- replace USERNAME with your gmail username
+  ;; ;; also, make sure the gnutls command line utils are installed
+  ;; ;; package 'gnutls-bin' in Debian/Ubuntu, 'gnutls' in Archlinux.
+
+  ;; (setq message-send-mail-function 'smtpmail-send-it
+  ;;       starttls-use-gnutls t
+  ;;       smtpmail-starttls-credentials '(("smtp.gmail.com" 587 nil nil))
+  ;;       smtpmail-auth-credentials (expand-file-name "~/.authinfo.gpg")
+  ;;       smtpmail-default-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-smtp-service 587
+  ;;       starttls-gnutls-program "/usr/local/bin/gnutls-cli"
+  ;;       smtpmail-stream-type 'starttls
+  ;;       smtpmail-smtp-user "rory.kirchner"
+  ;;       smtpmail-smtp-server "smtp.gmail.com"
+  ;;       smtpmail-debug-info t)
+
+  ;; (setq message-kill-buffer-on-exit t)
+  ;; )
+)
 ;; cwl is YAML
 (add-to-list 'auto-mode-alist'("\\.cwl" . yaml-mode))
 
@@ -302,7 +360,7 @@ layers configuration."
 (add-hook 'python-mode-hook 'anaconda-mode)
 (add-hook 'python-mode-hook 'eldoc-mode)
 ;;(add-to-list 'auto-mode-alist '("\\.R\\'" . R-mode))
-;;(add-to-list 'auto-mode-alist '("\\.Rmd\\'" . R-mode))
+(add-to-list 'auto-mode-alist '("\\.Rmd\\'" . poly-markdown+r-mode))
 (setq whitespace-style '(face empty tabs lines-tail trailing))
 (setq whitespace-line-column 80)
 (global-whitespace-mode t)
@@ -319,6 +377,12 @@ layers configuration."
 
 (setq ess-fancy-comments nil)
 
+(defun insert-r-chunk (header)
+  "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet"
+  (interactive "sHeader: ")
+  (insert (concat "```{r " header "}\n\n```"))
+  (forward-line -1))
+
 ;; remove smartparens mode, it is breaking everything.
 (remove-hook 'prog-mode-hook #'smartparens-mode)
 ;; (spacemacs/toggle-smartparens-globally-off)
@@ -333,11 +397,11 @@ layers configuration."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(ahs-case-fold-search nil)
- '(ahs-default-range (quote ahs-range-whole-buffer))
- '(ahs-idle-interval 0.25)
+ '(ahs-case-fold-search nil t)
+ '(ahs-default-range (quote ahs-range-whole-buffer) t)
+ '(ahs-idle-interval 0.25 t)
  '(ahs-idle-timer 0 t)
- '(ahs-inhibit-face-list nil)
+ '(ahs-inhibit-face-list nil t)
  '(ansi-color-faces-vector
    [default default default italic underline success warning error])
  '(custom-safe-themes
@@ -346,7 +410,13 @@ layers configuration."
  '(org-modules
    (quote
     (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m)))
- '(ring-bell-function (quote ignore) t))
+ '(package-selected-packages
+   (quote
+    (xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help pcache go-guru pug-mode hide-comnt wgrep smex ivy-hydra counsel-projectile counsel swiper ivy web-mode tagedit slim-mode scss-mode sass-mode less-css-mode jade-mode helm-css-scss haml-mode emmet-mode yapfify uuidgen powerline py-isort osx-dictionary org-projectile org org-download dash-functional mu4e-maildirs-extension mu4e-alert ht alert log4e gntp markdown-mode live-py-mode link-hint parent-mode projectile request go-mode gitignore-mode git-link pos-tip flycheck flx eyebrowse evil-visual-mark-mode evil-unimpaired magit magit-popup git-commit with-editor smartparens iedit evil-ediff anzu evil goto-chg undo-tree ctable ess julia-mode dumb-jump diminish column-enforce-mode hydra inflections edn multiple-cursors paredit yasnippet peg eval-sexp-fu highlight cider spinner queue pkg-info clojure-mode epl bind-map bind-key pythonic f dash s helm avy helm-core popup async package-build zenburn-theme yaml-mode ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe use-package toc-org spacemacs-theme spaceline smooth-scrolling smeargle reveal-in-osx-finder restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-yapf popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox page-break-lines osx-trash orgit org-repo-todo org-present org-pomodoro org-plus-contrib org-bullets open-junk-file ob-ipython neotree move-text monokai-theme mmm-mode markdown-toc magit-gitflow lua-mode lorem-ipsum linum-relative leuven-theme launchctl info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-ag google-translate golden-ratio go-eldoc gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger gh-md flycheck-pos-tip flx-ido fill-column-indicator fancy-battery expand-region exec-path-from-shell evil-visualstar evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view disaster define-word cython-mode cmake-mode clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu buffer-move bracketed-paste auto-highlight-symbol anaconda-mode aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line)))
+ '(ring-bell-function (quote ignore))
+ '(send-mail-function (quote smtpmail-send-it))
+ '(smtpmail-smtp-server "smtp.gmail.com")
+ '(smtpmail-smtp-service 25))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
