@@ -1,6 +1,8 @@
 ## from http://gettinggeneticsdone.blogspot.com/2013/07/customize-rprofile.html
 # don't ask for CRAN repository
 options("repos" = c(CRAN = "http://cran.rstudio.com/"))
+message(basename(Sys.getenv("R_LIBS_USER")))
+set.seed(123456)
 
 ## Create a new invisible environment for all the functions to go in so it doesn't clutter your workspace.
 .env <- new.env()
@@ -38,3 +40,13 @@ options(menu.graphics=FALSE)
 pbcopy = function(x) {
   capture.output(x, file=pipe("pbcopy"))
 }
+
+before_push = function() {
+devtools::document()
+devtools::check()
+lintr::lint_package()
+pkgdown::build_site()
+}
+
+repos = BiocInstaller::biocinstallRepos()
+options(max.print=25)
