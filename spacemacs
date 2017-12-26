@@ -12,6 +12,8 @@
    ;; of a list then all discovered layers will be installed.
    dotspacemacs-configuration-layers
    '(
+     javascript
+     csv
      ;; --------------------------------------------------------
      ;; Example of useful layers you may want to use right away
      ;; Uncomment a layer name and press C-c C-c to install it
@@ -24,6 +26,7 @@
           git-magit-status-fullscreen t
           git-enable-github-support t
           git-gutter-use-fringe t)
+     auto-completion
      osx
      shell
      org
@@ -38,6 +41,7 @@
      yaml
      html
      c-c++
+     odyssey
      )
    dotspacemacs-additional-packages '(ob-ipython)
 
@@ -152,17 +156,19 @@ before layers configuration."
    )
   ;; User initialization goes here
  (setq-default dotspacemacs-default-font '("Source Code Pro"
-                                          :size 13
+                                          :size 12
                                           :weight normal
                                           :width normal
                                           :powerline-scale 1.1))
-  )
+;; (setq-default evil-escape-key-sequence "jj")
+ ;;(setq-default evil-escape-delay 0.2)
+)
 
-
-(defun dotspacemacs/config ()
+(defun dotspacemacs/user-config ()
   "Configuration function.
  This function is called at the very end of Spacemacs initialization after
 layers configuration."
+
   (global-evil-search-highlight-persist 0)
   (evil-search-highlight-persist 0)
   ;; unprettify symbols under the cursor as we are editing
@@ -174,6 +180,17 @@ layers configuration."
             (lambda ()
               (setq ess-toggle-underscore nil)
               (setq ess-fancy-comments nil)))
+
+  (defvar keep-alive-timer nil)
+  (defun roryk-keep-alive ()
+    "documentation helps?"
+    (progn
+      (set-buffer "*shell*")
+      (comint-send-string "*shell*" ".")))
+  (defun toggle-keep-alive ()
+    (if keep-alive-timer
+        (setq keep-alive-timer nil)
+      (setq keep-alive-timer (run-at-time 0 (* 30 60) roryk-keep-alive))))
   )
 
 (with-eval-after-load 'org
@@ -218,18 +235,19 @@ layers configuration."
             (stuck "")
             (tags "@errand")))))
 
-  (setq org-stuck-projects
-          '("+@project/-MAYBE-DONE" ("NEXT" "WAITING") ("@SHOP")
-            "\\<IGNORE\\>"))
+  (setq org-stuck-projects '("+@project/-MAYBE-DONE" ("NEXT" "WAITING")))
   (setq org-tags-exclude-from-inheritance '("@project"))
-  (setq org-agenda-files '("~/Documents/Org/hsph.org"
-                          "~/Documents/Org/social.org"
-                          "~/Documents/Org/inbox.org"
-                          "~/Documents/Org/rem.org"))
+  (setq org-agenda-files '("~/Documents/Org/hsph.org"))
+
+  (setq org-agenda-files
+        (append org-agenda-files
+                (file-expand-wildcards
+                 "~/cache/hsph/*/org/*.org")))
+
   (setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
   (setq org-icalendar-alarm-time 60)
   (setq org-agenda-default-appointment-duration 60)
-  (setq org-agenda-skip-scheduled-if-done t)
+  (setq org-agenda-skip-scheduled-if-done nil)
 
   (setq org-refile-targets
         '(("~/Documents/Org/hsph.org" :maxlevel . 1)))
@@ -341,10 +359,10 @@ layers configuration."
 
   ;; (setq message-kill-buffer-on-exit t)
   ;; )
-)
+  )
+
 ;; cwl is YAML
 (add-to-list 'auto-mode-alist'("\\.cwl" . yaml-mode))
-
 
 ;; snagged from https://github.com/kaz-yos
 (setq tramp-default-method "ssh")
@@ -377,6 +395,8 @@ layers configuration."
 
 (setq ess-fancy-comments nil)
 
+(setq R-indent-level 4)
+
 (defun insert-r-chunk (header)
   "Insert an r-chunk in markdown mode. Necessary due to interactions between polymode and yas snippet"
   (interactive "sHeader: ")
@@ -397,6 +417,42 @@ layers configuration."
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(ahs-case-fold-search nil)
+ '(ahs-default-range (quote ahs-range-whole-buffer))
+ '(ahs-idle-interval 0.25)
+ '(ahs-idle-timer 0 t)
+ '(ahs-inhibit-face-list nil)
+ '(ansi-color-faces-vector
+   [default default default italic underline success warning error])
+ '(custom-safe-themes
+   (quote
+    ("a041a61c0387c57bb65150f002862ebcfe41135a3e3425268de24200b82d6ec9" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" "e80932ca56b0f109f8545576531d3fc79487ca35a9a9693b62bf30d6d08c9aaf" default)))
+ '(org-modules
+   (quote
+    (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m)))
+ '(package-selected-packages
+   (quote
+    (web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc company-tern tern coffee-mode request-deferred deferred org-trello helm-company helm-c-yasnippet fuzzy company-web web-completion-data company-statistics company-go company-c-headers company-anaconda company clojure-snippets auto-yasnippet ac-ispell auto-complete yasnippet winum org-plus-contrib csv-mode xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help pcache go-guru pug-mode hide-comnt wgrep smex ivy-hydra counsel-projectile counsel swiper ivy web-mode tagedit slim-mode scss-mode sass-mode less-css-mode jade-mode helm-css-scss haml-mode emmet-mode yapfify uuidgen powerline py-isort osx-dictionary org-projectile org-download dash-functional mu4e-maildirs-extension mu4e-alert ht alert log4e gntp markdown-mode live-py-mode link-hint parent-mode projectile request go-mode gitignore-mode git-link pos-tip flycheck flx eyebrowse evil-visual-mark-mode evil-unimpaired magit magit-popup git-commit with-editor smartparens iedit evil-ediff anzu evil goto-chg undo-tree ctable ess julia-mode dumb-jump diminish column-enforce-mode hydra inflections edn multiple-cursors paredit peg eval-sexp-fu highlight cider spinner queue pkg-info clojure-mode epl bind-map bind-key pythonic f dash s helm avy helm-core popup async package-build zenburn-theme yaml-mode ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe use-package toc-org spacemacs-theme spaceline smooth-scrolling smeargle reveal-in-osx-finder restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-yapf popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox page-break-lines osx-trash orgit org-repo-todo org-present org-pomodoro org-bullets open-junk-file ob-ipython neotree move-text monokai-theme mmm-mode markdown-toc magit-gitflow lua-mode lorem-ipsum linum-relative leuven-theme launchctl info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-ag google-translate golden-ratio go-eldoc gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger gh-md flycheck-pos-tip flx-ido fill-column-indicator fancy-battery expand-region exec-path-from-shell evil-visualstar evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view disaster define-word cython-mode cmake-mode clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu buffer-move bracketed-paste auto-highlight-symbol anaconda-mode aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line)))
+ '(ring-bell-function (quote ignore))
+ '(send-mail-function (quote smtpmail-send-it))
+ '(smtpmail-smtp-server "smtp.gmail.com")
+ '(smtpmail-smtp-service 25))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default ((t (:family "Source Code Pro" :foundry "nil" :slant normal :weight normal :height 130 :width normal)))))
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(ahs-case-fold-search nil t)
  '(ahs-default-range (quote ahs-range-whole-buffer) t)
  '(ahs-idle-interval 0.25 t)
@@ -412,7 +468,7 @@ layers configuration."
     (org-bbdb org-bibtex org-docview org-gnus org-habit org-info org-irc org-mhe org-rmail org-w3m)))
  '(package-selected-packages
    (quote
-    (xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help pcache go-guru pug-mode hide-comnt wgrep smex ivy-hydra counsel-projectile counsel swiper ivy web-mode tagedit slim-mode scss-mode sass-mode less-css-mode jade-mode helm-css-scss haml-mode emmet-mode yapfify uuidgen powerline py-isort osx-dictionary org-projectile org org-download dash-functional mu4e-maildirs-extension mu4e-alert ht alert log4e gntp markdown-mode live-py-mode link-hint parent-mode projectile request go-mode gitignore-mode git-link pos-tip flycheck flx eyebrowse evil-visual-mark-mode evil-unimpaired magit magit-popup git-commit with-editor smartparens iedit evil-ediff anzu evil goto-chg undo-tree ctable ess julia-mode dumb-jump diminish column-enforce-mode hydra inflections edn multiple-cursors paredit yasnippet peg eval-sexp-fu highlight cider spinner queue pkg-info clojure-mode epl bind-map bind-key pythonic f dash s helm avy helm-core popup async package-build zenburn-theme yaml-mode ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe use-package toc-org spacemacs-theme spaceline smooth-scrolling smeargle reveal-in-osx-finder restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-yapf popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox page-break-lines osx-trash orgit org-repo-todo org-present org-pomodoro org-plus-contrib org-bullets open-junk-file ob-ipython neotree move-text monokai-theme mmm-mode markdown-toc magit-gitflow lua-mode lorem-ipsum linum-relative leuven-theme launchctl info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-ag google-translate golden-ratio go-eldoc gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger gh-md flycheck-pos-tip flx-ido fill-column-indicator fancy-battery expand-region exec-path-from-shell evil-visualstar evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view disaster define-word cython-mode cmake-mode clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu buffer-move bracketed-paste auto-highlight-symbol anaconda-mode aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line)))
+    (symon string-inflection solarized-theme sayid realgud test-simple loc-changes load-relative password-generator org-category-capture org-brain impatient-mode helm-purpose window-purpose imenu-list godoctor go-rename evil-org evil-lion editorconfig company-lua cmake-ide levenshtein web-beautify livid-mode skewer-mode simple-httpd json-mode json-snatcher json-reformat js2-refactor js2-mode js-doc company-tern tern coffee-mode request-deferred deferred org-trello helm-company helm-c-yasnippet fuzzy company-web web-completion-data company-statistics company-go company-c-headers company-anaconda company clojure-snippets auto-yasnippet ac-ispell auto-complete yasnippet winum org-plus-contrib csv-mode xterm-color shell-pop multi-term eshell-z eshell-prompt-extras esh-help pcache go-guru pug-mode hide-comnt wgrep smex ivy-hydra counsel-projectile counsel swiper ivy web-mode tagedit slim-mode scss-mode sass-mode less-css-mode jade-mode helm-css-scss haml-mode emmet-mode yapfify uuidgen powerline py-isort osx-dictionary org-projectile org-download dash-functional mu4e-maildirs-extension mu4e-alert ht alert log4e gntp markdown-mode live-py-mode link-hint parent-mode projectile request go-mode gitignore-mode git-link pos-tip flycheck flx eyebrowse evil-visual-mark-mode evil-unimpaired magit magit-popup git-commit with-editor smartparens iedit evil-ediff anzu evil goto-chg undo-tree ctable ess julia-mode dumb-jump diminish column-enforce-mode hydra inflections edn multiple-cursors paredit peg eval-sexp-fu highlight cider spinner queue pkg-info clojure-mode epl bind-map bind-key pythonic f dash s helm avy helm-core popup async package-build zenburn-theme yaml-mode ws-butler window-numbering which-key volatile-highlights vi-tilde-fringe use-package toc-org spacemacs-theme spaceline smooth-scrolling smeargle reveal-in-osx-finder restart-emacs rainbow-delimiters quelpa pyvenv pytest pyenv-mode py-yapf popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox page-break-lines osx-trash orgit org-repo-todo org-present org-pomodoro org-bullets open-junk-file ob-ipython neotree move-text monokai-theme mmm-mode markdown-toc magit-gitflow lua-mode lorem-ipsum linum-relative leuven-theme launchctl info+ indent-guide ido-vertical-mode hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers highlight-indentation help-fns+ helm-themes helm-swoop helm-pydoc helm-projectile helm-mode-manager helm-make helm-gitignore helm-flx helm-descbinds helm-ag google-translate golden-ratio go-eldoc gnuplot gitconfig-mode gitattributes-mode git-timemachine git-messenger gh-md flycheck-pos-tip flx-ido fill-column-indicator fancy-battery expand-region exec-path-from-shell evil-visualstar evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-indent-plus evil-iedit-state evil-exchange evil-escape evil-args evil-anzu ess-smart-equals ess-R-object-popup ess-R-data-view disaster define-word cython-mode cmake-mode clj-refactor clean-aindent-mode clang-format cider-eval-sexp-fu buffer-move bracketed-paste auto-highlight-symbol anaconda-mode aggressive-indent adaptive-wrap ace-window ace-link ace-jump-helm-line)))
  '(ring-bell-function (quote ignore))
  '(send-mail-function (quote smtpmail-send-it))
  '(smtpmail-smtp-server "smtp.gmail.com")
@@ -423,3 +479,4 @@ layers configuration."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(default ((t (:family "Source Code Pro" :foundry "nil" :slant normal :weight normal :height 130 :width normal)))))
+)
