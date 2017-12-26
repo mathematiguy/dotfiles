@@ -12,6 +12,8 @@
 	cleanup = !git remote prune origin && git gc && git clean -dfx && git stash clear
 	who = shortlog -n -s --no-merges
 	pr = !sh -c 'git fetch origin pull/$1/head:pr$1' -
+	shorty = status --short --branch
+	grog = log --graph --abbrev-commit --decorate --all --format=format:\"%C(bold blue)%h%C(reset) - %C(bold cyan)%aD%C(dim white) - %an%C(reset) %C(bold green)(%ar)%C(reset)%C(bold yellow)%d%C(reset)%n %C(white)%s%C(reset)\"
 [color]
 	ui = 1
 [credential]
@@ -22,3 +24,7 @@
         fsckobjects = true 
 [receive] 
         fsckObjects = true 
+[filter "lfs"]
+	smudge = git-lfs smudge -- %f
+	required = true
+	clean = git-lfs clean -- %f
