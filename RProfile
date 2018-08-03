@@ -1,52 +1,50 @@
 ## from http://gettinggeneticsdone.blogspot.com/2013/07/customize-rprofile.html
 # don't ask for CRAN repository
 options("repos" = c(CRAN = "http://cran.rstudio.com/"))
-message(basename(Sys.getenv("R_LIBS_USER")))
+## for the love of god don't open up tcl/tk ever
+options(menu.graphics=FALSE)
+## help with debugging bioconductor/s4 code
+options(showErrorCalls = TRUE, showWarnCalls = TRUE)
+
+## set seed for reproducibility
 set.seed(123456)
 
-## Create a new invisible environment for all the functions to go in so it doesn't clutter your workspace.
+## Create a new invisible environment for all the functions to go in
+## so it doesn't clutter your workspace.
 .env <- new.env()
 
 ## ht==headtail, i.e., show the first and last 10 items of an object
-.env$ht <- function(d) rbind(head(d,10),tail(d,10))
-
-## List objects and classes (from @_inundata)
-.env$lsa <- function() {
-    obj_type <- function(x) { class(get(x)) }
-    foo=data.frame(sapply(ls(envir=.GlobalEnv),obj_type))
-    foo$object_name=rownames(foo)
-    names(foo)[1]="class"
-    names(foo)[2]="object"
-    return(unrowname(foo))
-}
-
-## List all functions in a package (also from @_inundata)
-.env$lsp <-function(package, all.names = FALSE, pattern) {
-    package <- deparse(substitute(package))
-    ls(
-    pos = paste("package", package, sep = ":"),
-    all.names = all.names,
-    pattern = pattern
-    )
-}
+.env$ht <- function(d, n=10) rbind(head(d, n), tail(d, n))
 
 ## Open Finder to the current directory on mac
 .env$macopen <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 .env$o <- function(...) if(Sys.info()[1]=="Darwin") system("open .")
 
-## For the love of god don't open up tcl/tk ever
-options(menu.graphics=FALSE)
-
-pbcopy = function(x) {
+.env$pbcopy = function(x) {
   capture.output(x, file=pipe("pbcopy"))
 }
 
-before_push = function() {
-devtools::document()
-devtools::check()
-lintr::lint_package()
-pkgdown::build_site()
+## Before pushing to bcbioRNA* run this function
+.env$before_push = function() {
+    devtools::document()
+    devtools::check()
+    lintr::lint_package()
+    pkgdown::build_site()
 }
 
 repos = BiocInstaller::biocinstallRepos()
-options(max.print=25)
+options(max.print=100)
+
+.env$update_bcbio = function(x) {
+    devtools::install_github("steinbaugh/basejump")
+    devtools::install_github("hbc/bcbioBase")
+    devtools::install_github("hbc/bcbioRNASeq")
+    devtools::install_github("hbc/bcbioSingleCell")
+}
+
+## knitr::opts_chunk$set(tidy=TRUE, highlight=TRUE, dev="png",
+##                cache=TRUE, highlight=TRUE, autodep=TRUE, warning=FALSE, error=FALSE,
+##                message=FALSE, prompt=TRUE, comment='', fig.cap='')
+ggplot2::theme_set(ggpubr::theme_pubr(base_size=10, base_family="Gill Sans"))
+
+attach(.env)
