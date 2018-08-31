@@ -43,7 +43,6 @@ This function should only modify configuration layer settings."
      auto-completion
      ess
      python
-     polymode
      yaml
      emacs-lisp
      git
@@ -52,12 +51,13 @@ This function should only modify configuration layer settings."
      org
      syntax-checking
      nim
+     julia
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '(tramp-term)
+   dotspacemacs-additional-packages '(tramp-term polymode poly-R poly-markdown poly-noweb)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -136,12 +136,7 @@ It should only modify the values of Spacemacs settings."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(doom-city-lights
-                         spacemacs-dark
-                         doom-dracula
-                         doom-molokai
-                         doom-opera
-                         doom-one
+   dotspacemacs-themes '(spacemacs-dark
                          spacemacs-light)
    ;; If non-nil the cursor color matches the state color in GUI Emacs.
    ;; (default t)
@@ -364,8 +359,56 @@ before packages are loaded."
   ;; this makes using tramp very nice
   (setq tramp-default-method "ssh")
 
+  ;; this is necessary to get ess-remote to work, i dont understand why
+  (require 'ess-site)
+
   ;; don't auto-indent R comments
   (setq ess-fancy-comments nil)
+
+  (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
+
+  ;; needed for X11 working properl
+  (add-to-list 'tramp-remote-process-environment
+               (format "DISPLAY=%s" (getenv "DISPLAY")))
+
+  ;; default ess to use R (via https://gist.github.com/benmarwick/ee0f400b14af87a57e4a)
+  (defun ess-set-language ()
+    (setq-default ess-language "R")
+    (setq ess-language "R")
+    )
+
+  (defun then_R_operator ()
+    "R - %>% operator or 'then' pipe operator"
+    (interactive)
+    (just-one-space 1)
+    (insert "%>%")
+    (reindent-then-newline-and-indent))
+
+  (define-key ess-mode-map (kbd "C-S-m") 'then_R_operator)
+  (define-key inferior-ess-mode-map (kbd "C-S-m") 'then_R_operator)
+
+  (add-hook 'ess-post-run-hook 'ess-set-language t)
+
+  ;; render rmarkdown (via https://gist.github.com/benmarwick/ee0f400b14af87a57e4a)
+  (defun ess-rmarkdown ()
+    "Compile R markdown (.Rmd). Should work for any output type."
+    (interactive)
+    (condition-case nil
+        (ess-get-process)
+      (error 
+       (ess-switch-process)))
+    (let* ((rmd-buf (current-buffer)))
+      (save-excursion
+        (let* ((sprocess (ess-get-process ess-current-process-name))
+               (sbuffer (process-buffer sprocess))
+               (buf-coding (symbol-name buffer-file-coding-system))
+               (R-cmd
+                (format "library(rmarkdown); rmarkdown::render(\"%s\")"
+                        buffer-file-name)))
+          (message "Running rmarkdown on %s" buffer-file-name)
+          (ess-execute R-cmd 'buffer nil nil)
+          (switch-to-buffer rmd-buf)
+          (ess-show-buffer (buffer-name sbuffer) nil)))))
 
   ;; rmarkdown niceness
   (defun insert-r-chunk (header)
@@ -373,11 +416,11 @@ before packages are loaded."
     (interactive "sHeader: ")
     (insert (concat "```{r " header "}\n\n```"))
     (forward-line -1))
-  
-;;  (setq inferior-R-program-name "/Users/rory/.conda/bin/R")
+
+  (setq inferior-R-program-name "$HOME/.conda/bin/conda")
 
   ;; set pandoc binary for ess
-  (setq pandoc-binary "/Users/rory/.conda/bin/pandoc")
+;;  (setq pandoc-binary "/Users/rory/.conda/bin/pandoc")
 
   ;; org-mode configuration
   (setq org-agenda-files
@@ -501,7 +544,9 @@ before packages are loaded."
   (setq org-pomodoro-long-break-length 10)
   (setq org-pomodoro-ticking-sound-args "-volume 3")
   (setq org-pomodoro-ticking-sound-p nil)
+  (require `ess-site)
   )
+
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -519,7 +564,7 @@ This function is called at the very end of Spacemacs initialization."
    ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
  '(package-selected-packages
    (quote
-    (org-brain evil-org evil-lion evil-goggles evil-cleverparens emmet-mode editorconfig counsel-css company-web centered-cursor-mode font-lock+ dotenv-mode yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
+    (poly-noweb poly-markdown poly-R zenburn-theme zen-and-art-theme white-sand-theme web-mode underwater-theme ujelly-theme twilight-theme twilight-bright-theme doom-city-lights-theme yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -538,10 +583,11 @@ This function is called at the very end of Spacemacs initialization."
    ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
  '(package-selected-packages
    (quote
-    (yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
+    (zenburn-theme zen-and-art-theme white-sand-theme web-mode underwater-theme ujelly-theme twilight-theme twilight-bright-theme doom-city-lights-theme yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+
