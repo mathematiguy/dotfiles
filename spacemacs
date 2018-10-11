@@ -52,12 +52,14 @@ This function should only modify configuration layer settings."
      syntax-checking
      nim
      julia
+     org-roryk
      )
    ;; List of additional packages that will be installed without being
    ;; wrapped in a layer. If you need some configuration for these
    ;; packages, then consider creating a layer. You can also put the
    ;; configuration in `dotspacemacs/user-config'.
-   dotspacemacs-additional-packages '(tramp-term polymode poly-R poly-markdown poly-noweb)
+   dotspacemacs-additional-packages '(tramp-term polymode poly-R poly-markdown
+                                                 poly-noweb)
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
    ;; A list of packages that will not be installed and loaded.
@@ -113,6 +115,7 @@ It should only modify the values of Spacemacs settings."
    ;; (default 'vim)
    dotspacemacs-editing-style 'vim
    ;; If non-nil output loading progress in `*Messages*' buffer. (default nil)
+   dotspacemacs-mode-line-theme `spacemacs
    dotspacemacs-verbose-loading nil
    ;; Specify the startup banner. Default value is `official', it displays
    ;; the official spacemacs logo. An integer value is the index of text
@@ -348,6 +351,8 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
+  (setq tramp-ssh-controlmaster-options
+        "-o ControlMaster=auto -o ControlPath='tramp.%%C' -o ControlPersist=no")
   )
 
 (defun dotspacemacs/user-config ()
@@ -368,8 +373,8 @@ before packages are loaded."
   (add-to-list 'auto-mode-alist '("\\.Rmd" . poly-markdown+r-mode))
 
   ;; needed for X11 working properl
-  (add-to-list 'tramp-remote-process-environment
-               (format "DISPLAY=%s" (getenv "DISPLAY")))
+  ;; (add-to-list 'tramp-remote-process-environment
+  ;;              (format "DISPLAY=%s" (getenv "DISPLAY")))
 
   ;; default ess to use R (via https://gist.github.com/benmarwick/ee0f400b14af87a57e4a)
   (defun ess-set-language ()
@@ -416,137 +421,7 @@ before packages are loaded."
     (interactive "sHeader: ")
     (insert (concat "```{r " header "}\n\n```"))
     (forward-line -1))
-
-  (setq inferior-R-program-name "$HOME/.conda/bin/conda")
-
-  ;; set pandoc binary for ess
-;;  (setq pandoc-binary "/Users/rory/.conda/bin/pandoc")
-
-  ;; org-mode configuration
-  (setq org-agenda-files
-        (append '("~/Documents/Org/hsph.org"
-                  "~/Documents/org/meetings.org"
-                  "~/Documents/Org/tickler.org"
-                  "~/Documents/Org/social.org"
-                  "~/Documents/Org/inbox.org")
-                (file-expand-wildcards "~/Documents/Org/projects/*/*.org")
-                (file-expand-wildcards "~/Documents/Org/software/*/*.org")
-                (file-expand-wildcards "~/cache/hsph/*/org/*.org")))
-  (setq org-agenda-skip-scheduled-if-done t)
-  (setq org-agenda-skip-deadline-if-done t)
-  (setq org-todo-keywords
-        '((sequence "TODO(t)" "WAITING(w)" "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c@)")
-          (sequence "NEXT(n)" "|" "DONE(x!)" "CANCELLED(c@)")
-          (sequence "MEET(m)" "|" "COMPLETE(x)")
-          (sequence "TALK(T)")
-          (sequence "BUG(b)" "|" "FIXED(f)")
-          (sequence "READ(r)" "|" "DONE(x!)")
-          (sequence "TODELEGATE(-)" "DELEGATED(d)" "COMPLETE(x)")))
-  (setq org-stuck-projects '("+@project/-MAYBE-DONE" ("NEXT" "WAITING" "DELEGATED")))
-  (setq org-tags-exclude-from-inheritance '("@project"))
-
-  ;; act as a day planner
-  (setq org-agenda-start-on-weekday nil)
-
-  ;; stuff for GTD
-  (setq org-agenda-custom-commands
-        '(("W" "Weekly Review"
-           ((agenda "" ((org-agenda-span 7)
-                        (org-agenda-start-day "-7d")
-                        (org-agenda-entry-types '(:timestamp))
-                        (org-agenda-show-log t)))
-            (stuck "")
-            (todo "TODO")  ;; review what is next
-            (todo "DELEGATED|WAITING") ;; projects we are waiting on
-            (tags "PROJECT") ;; review all projects
-            (tags "SOMEDAY"))) ;; review someday/maybe items
-
-          ("D" "Daily review"
-           ((agenda "" ((org-agenda-span 7)))
-            (stuck "")
-            (todo "NEXT")
-            (todo "DELEGATED|WAITING") ;; projects we are waiting on
-            (tags "@inbox")
-            (tags "@errand/-DONE-CANCELLED")
-            (tags "-@inbox-@errand-SCHEDULED={.+}/!+NEXT")))))
-
-  (defun org-archive-done-tasks ()
-    (interactive)
-    (org-map-entries
-     (lambda ()
-       (org-archive-subtree)
-       (setq org-map-continue-from (outline-previous-heading)))
-     "/DONE" 'tree))
-
-  (defun org-archive-cancelled-tasks ()
-    (interactive)
-    (org-map-entries
-     (lambda ()
-       (org-archive-subtree)
-       (setq org-map-continue-from (outline-previous-heading)))
-     "/CANCELLED" 'tree))
-
-  (defun org-archive-completed-tasks ()
-    (interactive)
-    (org-archive-done-tasks)
-    (org-archive-cancelled-tasks)
-    )
-
-  (setq org-refile-targets '((nil :maxlevel . 1)
-                             (org-agenda-files :maxlevel . 1)))
-
-  (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                                 (file+headline "~/Documents/Org/inbox.org" "Tasks")
-                                 "* TODO %i%?")
-                                ("T" "Tickler" entry
-                                 (file+headline "~/Documents/Org/tickler.org" "Tickler")
-                                 "* %i%? \n %U")))
-
-  (setq org-icalendar-combined-agenda-file "~/Dropbox/Public/hsph.ics")
-  (setq org-icalendar-alarm-time 60)
-  (setq org-agenda-default-appointment-duration 60)
-
-  ;; automatically sync with ical
-  (defun notify-osx (title message)
-    (call-process "terminal-notifier"
-                  nil 0 nil
-                  "-group" "Emacs"
-                  "-title" title
-                  "-sender" "org.gnu.Emacs"
-                  "-message" message))
-
-  (defvar roryk-org-sync-timer nil)
-
-  (defvar roryk-org-sync-secs (* 60 20))
-
-  (defun roryk-org-sync ()
-    (interactive)
-    (org-icalendar-combine-agenda-files)
-    (notify-osx "Emacs (org-mode)" "iCal sync completed."))
-
-  (defun roryk-org-sync-start ()
-    "Start automated org-mode syncing"
-    (interactive)
-    (setq roryk-org-sync-timer
-          (run-with-idle-timer roryk-org-sync-secs t
-                               'roryk-org-sync)))
-
-  (defun roryk-org-sync-stop ()
-    "Stop automated org-mode syncing"
-    (interactive)
-    (cancel-timer roryk-org-sync-timer))
-
-  (roryk-org-sync-start)
-
-  (setq org-pomodoro-play-sounds t)
-  (setq org-pomodoro-length 15)
-  (setq org-pomodoro-short-break-length 5)
-  (setq org-pomodoro-long-break-length 10)
-  (setq org-pomodoro-ticking-sound-args "-volume 3")
-  (setq org-pomodoro-ticking-sound-p nil)
-  (require `ess-site)
   )
-
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
@@ -564,7 +439,7 @@ This function is called at the very end of Spacemacs initialization."
    ["#0a0814" "#f2241f" "#67b11d" "#b1951d" "#4f97d7" "#a31db1" "#28def0" "#b2b2b2"])
  '(package-selected-packages
    (quote
-    (poly-noweb poly-markdown poly-R zenburn-theme zen-and-art-theme white-sand-theme web-mode underwater-theme ujelly-theme twilight-theme twilight-bright-theme doom-city-lights-theme yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
+    (doom-modeline eldoc-eval shrink-path zenburn-theme zen-and-art-theme white-sand-theme web-mode underwater-theme ujelly-theme twilight-theme twilight-bright-theme doom-city-lights-theme yapfify yaml-mode ws-butler winum which-key wgrep web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package tramp-term toc-org spaceline powerline smex smeargle reveal-in-osx-finder restart-emacs request rainbow-delimiters pyvenv pytest pyenv-mode py-isort popwin polymode pip-requirements persp-mode pcre2el pbcopy paradox spinner osx-trash osx-dictionary orgit org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-plus-contrib org-mime org-download org-bullets open-junk-file nim-mode flycheck-nimsuggest commenter epc concurrent deferred neotree move-text mmm-mode markdown-toc markdown-mode magit-gitflow macrostep lorem-ipsum livid-mode skewer-mode simple-httpd live-py-mode linum-relative link-hint launchctl json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc ivy-hydra indent-guide hydra hy-mode hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-make helm helm-core google-translate golden-ratio gnuplot gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md fuzzy flycheck-pos-tip pos-tip flycheck-nim flycheck flx-ido flx fill-column-indicator fancy-battery eyebrowse expand-region exec-path-from-shell evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-search-highlight-persist evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit magit-popup git-commit ghub with-editor evil-lisp-state smartparens evil-indent-plus evil-iedit-state iedit evil-exchange evil-escape evil-ediff evil-args evil-anzu anzu evil goto-chg undo-tree eval-sexp-fu highlight ess-smart-equals ess-R-data-view ctable ess julia-mode elisp-slime-nav dumb-jump diminish cython-mode csv-mode counsel-projectile projectile pkg-info epl counsel swiper ivy company-tern dash-functional tern company-statistics company-anaconda company column-enforce-mode coffee-mode clean-aindent-mode bind-map bind-key auto-yasnippet yasnippet auto-highlight-symbol auto-compile packed async anaconda-mode pythonic f s aggressive-indent adaptive-wrap ace-window ace-link avy ac-ispell auto-complete popup doom-themes dash))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -591,3 +466,23 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  )
 
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-mode-manager helm-flx helm-descbinds helm-ag define-word ace-jump-helm-line zenburn-theme zen-and-art-theme yasnippet-snippets yapfify yaml-mode ws-butler winum white-sand-theme which-key wgrep web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package underwater-theme ujelly-theme twilight-theme twilight-bright-theme twilight-anti-bright-theme tramp-term toxi-theme toc-org tao-theme tangotango-theme tango-plus-theme tango-2-theme tagedit symon sunny-day-theme sublime-themes subatomic256-theme subatomic-theme string-inflection spaceline-all-the-icons spacegray-theme soothe-theme solarized-theme soft-stone-theme soft-morning-theme soft-charcoal-theme smyx-theme smex smeargle slim-mode seti-theme scss-mode sass-mode reverse-theme reveal-in-osx-finder restart-emacs request rebecca-theme rainbow-delimiters railscasts-theme pyvenv pytest pyenv-mode py-isort purple-haze-theme pug-mode professional-theme prettier-js popwin poly-R planet-theme pippel pipenv pip-requirements phoenix-dark-pink-theme phoenix-dark-mono-theme persp-mode pcre2el password-generator paradox overseer osx-trash osx-dictionary orgit organic-green-theme org-projectile org-present org-pomodoro org-mime org-download org-bullets org-brain open-junk-file omtose-phellack-theme oldlace-theme occidental-theme obsidian-theme noctilux-theme nim-mode neotree naquadah-theme nameless mustang-theme move-text monokai-theme monochrome-theme molokai-theme moe-theme mmm-mode minimal-theme material-theme markdown-toc majapahit-theme magit-svn magit-gitflow madhat2r-theme macrostep lush-theme lsp-julia lorem-ipsum livid-mode live-py-mode link-hint light-soap-theme launchctl kaolin-themes julia-repl json-navigator json-mode js2-refactor js-doc jbeans-theme jazz-theme ivy-yasnippet ivy-xref ivy-purpose ivy-hydra ir-black-theme inkpot-theme indent-guide importmagic impatient-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation heroku-theme hemisu-theme helm-make hc-zenburn-theme gruvbox-theme gruber-darker-theme grandshell-theme gotham-theme google-translate golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md gandalf-theme fuzzy font-lock+ flycheck-pos-tip flycheck-nim flx-ido flatui-theme flatland-theme fill-column-indicator farmhouse-theme fancy-battery eziam-theme eyebrowse expand-region exotica-theme evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-cleverparens evil-args evil-anzu eval-sexp-fu ess-R-data-view espresso-theme emmet-mode elisp-slime-nav editorconfig dumb-jump dracula-theme dotenv-mode doom-themes doom-modeline django-theme diminish darktooth-theme darkokai-theme darkmine-theme darkburn-theme dakrone-theme cython-mode cyberpunk-theme csv-mode counsel-projectile counsel-css company-web company-tern company-statistics company-anaconda column-enforce-mode color-theme-sanityinc-tomorrow color-theme-sanityinc-solarized clues-theme clean-aindent-mode cherry-blossom-theme centered-cursor-mode busybee-theme bubbleberry-theme birds-of-paradise-plus-theme badwolf-theme auto-yasnippet auto-highlight-symbol auto-compile apropospriate-theme anti-zenburn-theme ample-zen-theme ample-theme alect-themes aggressive-indent afternoon-theme ace-window ace-link ac-ispell))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)
